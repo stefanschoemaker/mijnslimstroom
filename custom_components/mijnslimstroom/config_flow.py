@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from typing import Any
 
 import voluptuous as vol
@@ -12,6 +13,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import InvalidAuth, MijnSlimstroomApi, MijnSlimstroomError
 from .const import CONF_DISPLAY_NAME, CONF_SITE_ID, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -40,7 +43,11 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.login()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except MijnSlimstroomError:
+            except MijnSlimstroomError as e:
+                # De onderliggende oorzaak (DNS, timeout, TLS, 5xx)
+                # verdwijnt anders achter een generiek "kan niet
+                # bereiken" - een blik in het log moet genoeg zijn.
+                _LOGGER.warning("Verbinden mislukt: %s", e)
                 errors["base"] = "cannot_connect"
             else:
                 await self.async_set_unique_id(
@@ -79,7 +86,8 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
                 await api.login()
             except InvalidAuth:
                 errors["base"] = "invalid_auth"
-            except MijnSlimstroomError:
+            except MijnSlimstroomError as e:
+                _LOGGER.warning("Verbinden mislukt: %s", e)
                 errors["base"] = "cannot_connect"
             else:
                 return self.async_update_reload_and_abort(

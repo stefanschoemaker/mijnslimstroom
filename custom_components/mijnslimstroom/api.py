@@ -59,7 +59,9 @@ class MijnSlimstroomApi:
         except InvalidAuth:
             raise
         except Exception as e:  # noqa: BLE001 - netwerk/parse -> een fouttype
-            raise MijnSlimstroomError(f"login mislukt: {e}") from e
+            raise MijnSlimstroomError(
+                f"login mislukt: {type(e).__name__}: {e}"
+            ) from e
         self._token = body["access_token"]
         # Ruime marge voor de verversing: een verzoek vlak voor expiry
         # mag nooit met een net-verlopen token vertrekken.
@@ -88,7 +90,9 @@ class MijnSlimstroomApi:
         except (InvalidAuth, MijnSlimstroomError):
             raise
         except Exception as e:  # noqa: BLE001
-            raise MijnSlimstroomError(f"GET {path} mislukt: {e}") from e
+            raise MijnSlimstroomError(
+                f"GET {path} mislukt: {type(e).__name__}: {e}"
+            ) from e
 
     async def live(self) -> dict:
         return await self._get("/api/live")
