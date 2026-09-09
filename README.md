@@ -37,35 +37,6 @@ Voorbeeld-automatisering: de vaatwasser starten zodra het plan
 "laden" zegt (goedkope stroom) of het huis waarschuwen bij "ontladen"
 (dure stroom).
 
-### Validatie-CI (nog toe te voegen)
-
-De standaard hassfest + HACS-validatieworkflow kon niet mee in deze
-push (het gebruikte OAuth-token mist de `workflow`-scope). Eenmalig
-`gh auth refresh -s workflow` draaien en dit bestand als
-`.github/workflows/validate.yaml` toevoegen:
-
-```yaml
-name: Validate
-on:
-  push:
-  pull_request:
-  schedule:
-    - cron: "0 4 * * 1"
-jobs:
-  hassfest:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: home-assistant/actions/hassfest@master
-  hacs:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: hacs/action@main
-        with:
-          category: integration
-```
-
 ## Android-app
 
 De Android-versie van de Mijn SlimStroom-app staat onder
