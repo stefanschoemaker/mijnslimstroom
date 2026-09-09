@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mijn SlimStroom",
+        "description": "Sign in with the same credentials as the Mijn SlimStroom app.",
+        "data": {
+          "username": "Username",
+          "password": "Password"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Sign in again",
+        "description": "Your password changed or was revoked. Enter the new password.",
+        "data": {
+          "password": "Password"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Credentials rejected",
+      "cannot_connect": "Cannot reach app.mijnslimstroom.nl"
+    },
+    "abort": {
+      "already_configured": "This site is already configured",
+      "reauth_successful": "Signed in again"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pv_power": { "name": "Solar power" },
+      "load_power": { "name": "House load" },
+      "battery_power": { "name": "Battery power" },
+      "grid_power": { "name": "Grid power" },
+      "battery_soc": { "name": "Battery" },
+      "pv_today": { "name": "Generated today" },
+      "load_today": { "name": "Consumed today" },
+      "grid_in_today": { "name": "Imported today" },
+      "grid_out_today": { "name": "Exported today" },
+      "to_battery_today": { "name": "Charged today" },
+      "from_battery_today": { "name": "Discharged today" },
+      "self_sufficiency_today": { "name": "Self-sufficient today" },
+      "saldo_today": { "name": "Balance today" },
+      "current_price": { "name": "Electricity price" },
+      "plan_action": {
+        "name": "Battery plan",
+        "state": {
+          "laden": "Charging",
+          "ontladen": "Discharging",
+          "rust": "Idle"
+        }
+      }
+    }
+  }
+}

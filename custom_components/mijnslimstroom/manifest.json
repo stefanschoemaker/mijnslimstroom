@@ -1,0 +1,13 @@
+{
+  "domain": "mijnslimstroom",
+  "name": "Mijn SlimStroom",
+  "codeowners": ["@stefanschoemaker"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://help.mijnslimstroom.nl",
+  "integration_type": "hub",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/stefanschoemaker/mijnslimstroom/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}

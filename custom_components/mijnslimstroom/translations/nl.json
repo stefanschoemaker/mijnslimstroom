@@ -1,0 +1,55 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Mijn SlimStroom",
+        "description": "Log in met dezelfde gegevens als de Mijn SlimStroom-app.",
+        "data": {
+          "username": "Gebruikersnaam",
+          "password": "Wachtwoord"
+        }
+      },
+      "reauth_confirm": {
+        "title": "Opnieuw inloggen",
+        "description": "Je wachtwoord is gewijzigd of ingetrokken. Voer het nieuwe wachtwoord in.",
+        "data": {
+          "password": "Wachtwoord"
+        }
+      }
+    },
+    "error": {
+      "invalid_auth": "Inloggegevens geweigerd",
+      "cannot_connect": "Kan app.mijnslimstroom.nl niet bereiken"
+    },
+    "abort": {
+      "already_configured": "Deze locatie is al toegevoegd",
+      "reauth_successful": "Opnieuw ingelogd"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pv_power": { "name": "Zonvermogen" },
+      "load_power": { "name": "Huisverbruik" },
+      "battery_power": { "name": "Batterijvermogen" },
+      "grid_power": { "name": "Netvermogen" },
+      "battery_soc": { "name": "Accu" },
+      "pv_today": { "name": "Opgewekt vandaag" },
+      "load_today": { "name": "Verbruikt vandaag" },
+      "grid_in_today": { "name": "Geïmporteerd vandaag" },
+      "grid_out_today": { "name": "Geëxporteerd vandaag" },
+      "to_battery_today": { "name": "Geladen vandaag" },
+      "from_battery_today": { "name": "Ontladen vandaag" },
+      "self_sufficiency_today": { "name": "Zelfvoorzienend vandaag" },
+      "saldo_today": { "name": "Saldo vandaag" },
+      "current_price": { "name": "Stroomprijs" },
+      "plan_action": {
+        "name": "Batterijplan",
+        "state": {
+          "laden": "Laden",
+          "ontladen": "Ontladen",
+          "rust": "Rust"
+        }
+      }
+    }
+  }
+}
