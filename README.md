@@ -28,9 +28,16 @@ gebruikt dezelfde inloggegevens als de Mijn SlimStroom-app.
 | Netvermogen | W | + = import, - = export |
 | Accu | % | |
 | Opgewekt / Verbruikt / Geimporteerd / Geexporteerd / Geladen / Ontladen vandaag | kWh | dagteller, bruikbaar in het Energie-dashboard |
+
+**Energie-dashboard**: netverbruik = *Geimporteerd vandaag* met
+prijs-entiteit *Stroomprijs*; teruglevering = *Geexporteerd vandaag*
+met prijs-entiteit *Terugleverprijs*; zonnepanelen = *Opgewekt
+vandaag*; thuisbatterij = *Geladen* / *Ontladen vandaag*. Zo rekent
+Home Assistant de kosten met dezelfde tarieven als de app.
 | Zelfvoorzienend vandaag | % | per uur gemeten |
 | Saldo vandaag | EUR | verdiend minus uitgegeven |
 | Stroomprijs | EUR/kWh | actueel kwartier, inclusief leveringsmarge, energiebelasting en btw (of het vaste tarief); kaal EPEX als er geen contract is ingesteld |
+| Terugleverprijs | EUR/kWh | wat teruglevering nu oplevert (saldering/vast/dynamisch) |
 | Batterijplan | laden / ontladen / rust | automatiseer op wat de batterij NU doet |
 
 Voorbeeld-automatisering: de vaatwasser starten zodra het plan

@@ -47,6 +47,9 @@
           "ontladen": "mdi:battery-arrow-down",
           "rust": "mdi:battery-outline"
         }
+      },
+      "export_price": {
+        "default": "mdi:transmission-tower-export"
       }
     }
   }

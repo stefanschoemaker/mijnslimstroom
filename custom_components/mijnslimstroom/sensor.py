@@ -149,6 +149,13 @@ SENSORS: tuple[SlimstroomSensorDescription, ...] = (
         suggested_display_precision=3,
         value_fn=lambda c: c.current_price_eur_per_kwh(),
     ),
+    SlimstroomSensorDescription(
+        key="export_price", translation_key="export_price",
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement="EUR/kWh",
+        suggested_display_precision=3,
+        value_fn=lambda c: c.export_price_eur_per_kwh(),
+    ),
     # ---- batterijplan (automatiseer op laden/ontladen/rust) ----
     SlimstroomSensorDescription(
         key="plan_action", translation_key="plan_action",

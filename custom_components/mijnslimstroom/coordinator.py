@@ -98,6 +98,36 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
         vat = 1.0 + (cfg.get("vat_pct") or 0.0)
         return round((epex + margin + tax) * vat, 5)
 
+    def export_price_eur_per_kwh(self) -> float | None:
+        """Wat een teruggeleverde kWh nu oplevert - de export-kant van
+        het contract, zelfde semantiek als de app-earnings:
+
+        - saldering: teruglevering streept weg tegen afname, dus de
+          waarde is de volledige importprijs;
+        - flat: het vaste terugleveringstarief;
+        - dynamic: EPEX (+ zonbonus zolang de zon op is) + marge.
+        """
+        cfg = (self._slow.get("pricing_config") or {}).get("effective")
+        if not cfg:
+            return None
+        mode = cfg.get("export_mode")
+        if mode == "saldering":
+            return self.current_price_eur_per_kwh()
+        if mode == "flat":
+            return cfg.get("feed_in_tariff_eur_per_kwh")
+        p = self._slow.get("pricing")
+        if not p:
+            return None
+        idx = p.get("current_hour_idx")
+        prices = p.get("prices_eur_per_kwh") or []
+        if idx is None or idx >= len(prices) or prices[idx] is None:
+            return None
+        epex = prices[idx]
+        sun = self.hass.states.get("sun.sun")
+        daytime = sun is not None and sun.state == "above_horizon"
+        bonus = 1.0 + (cfg.get("sun_bonus_pct") or 0.0) if daytime else 1.0
+        return round(epex * bonus + (cfg.get("export_margin_eur_per_kwh") or 0.0), 5)
+
     def current_plan_action(self) -> str | None:
         f = self._slow.get("forecast")
         if not f or not f.get("available"):
