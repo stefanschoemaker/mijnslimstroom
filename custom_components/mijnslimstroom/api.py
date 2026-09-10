@@ -106,5 +106,8 @@ class MijnSlimstroomApi:
     async def pricing_today(self) -> dict:
         return await self._get("/api/pricing/today?resolution=15min")
 
+    async def pricing_config(self) -> dict:
+        return await self._get("/api/pricing/config")
+
     async def forecast(self) -> dict:
         return await self._get("/api/forecast")

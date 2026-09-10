@@ -30,7 +30,7 @@ gebruikt dezelfde inloggegevens als de Mijn SlimStroom-app.
 | Opgewekt / Verbruikt / Geimporteerd / Geexporteerd / Geladen / Ontladen vandaag | kWh | dagteller, bruikbaar in het Energie-dashboard |
 | Zelfvoorzienend vandaag | % | per uur gemeten |
 | Saldo vandaag | EUR | verdiend minus uitgegeven |
-| Stroomprijs | EUR/kWh | actueel kwartier (kaal EPEX) |
+| Stroomprijs | EUR/kWh | actueel kwartier, inclusief leveringsmarge, energiebelasting en btw (of het vaste tarief); kaal EPEX als er geen contract is ingesteld |
 | Batterijplan | laden / ontladen / rust | automatiseer op wat de batterij NU doet |
 
 Voorbeeld-automatisering: de vaatwasser starten zodra het plan

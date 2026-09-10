@@ -58,6 +58,7 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
             ("today", self.api.today),
             ("earnings", self.api.earnings_today),
             ("pricing", self.api.pricing_today),
+            ("pricing_config", self.api.pricing_config),
             ("forecast", self.api.forecast),
         ):
             try:
@@ -72,6 +73,11 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
     # ---- afgeleiden voor de sensoren ---------------------------------
 
     def current_price_eur_per_kwh(self) -> float | None:
+        """De prijs die de klant nu echt betaalt: inclusief
+        leveringsmarge, energiebelasting en btw (dynamisch contract),
+        of het vaste tarief (vast contract) - dezelfde rekensom als
+        het app-scherm Prijzen. Zonder contractconfiguratie valt hij
+        terug op de kale EPEX-beursprijs."""
         p = self._slow.get("pricing")
         if not p:
             return None
@@ -79,7 +85,18 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
         prices = p.get("prices_eur_per_kwh") or []
         if idx is None or idx >= len(prices):
             return None
-        return prices[idx]
+        epex = prices[idx]
+        if epex is None:
+            return None
+        cfg = (self._slow.get("pricing_config") or {}).get("effective")
+        if not cfg:
+            return epex
+        if cfg.get("contract") == "fixed":
+            return cfg.get("fixed_eur_per_kwh", epex)
+        margin = cfg.get("supplier_margin_eur_per_kwh") or 0.0
+        tax = cfg.get("tax_eur_per_kwh") or 0.0
+        vat = 1.0 + (cfg.get("vat_pct") or 0.0)
+        return round((epex + margin + tax) * vat, 5)
 
     def current_plan_action(self) -> str | None:
         f = self._slow.get("forecast")

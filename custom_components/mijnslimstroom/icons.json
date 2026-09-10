@@ -1,0 +1,53 @@
+{
+  "entity": {
+    "sensor": {
+      "pv_power": {
+        "default": "mdi:solar-power-variant"
+      },
+      "load_power": {
+        "default": "mdi:home-lightning-bolt"
+      },
+      "battery_power": {
+        "default": "mdi:battery-charging"
+      },
+      "grid_power": {
+        "default": "mdi:transmission-tower"
+      },
+      "pv_today": {
+        "default": "mdi:solar-power"
+      },
+      "load_today": {
+        "default": "mdi:home-lightning-bolt-outline"
+      },
+      "grid_in_today": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "grid_out_today": {
+        "default": "mdi:transmission-tower-export"
+      },
+      "to_battery_today": {
+        "default": "mdi:battery-plus"
+      },
+      "from_battery_today": {
+        "default": "mdi:battery-minus"
+      },
+      "self_sufficiency_today": {
+        "default": "mdi:home-percent"
+      },
+      "saldo_today": {
+        "default": "mdi:cash-multiple"
+      },
+      "current_price": {
+        "default": "mdi:currency-eur"
+      },
+      "plan_action": {
+        "default": "mdi:battery-clock",
+        "state": {
+          "laden": "mdi:battery-arrow-up",
+          "ontladen": "mdi:battery-arrow-down",
+          "rust": "mdi:battery-outline"
+        }
+      }
+    }
+  }
+}
