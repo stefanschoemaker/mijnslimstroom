@@ -111,3 +111,8 @@ class MijnSlimstroomApi:
 
     async def forecast(self) -> dict:
         return await self._get("/api/forecast")
+
+    async def smart(self) -> dict:
+        """Slimme momenten: {"enabled": false} zolang de klant ze niet
+        aanzet in de app (Account > Slimme apparaten)."""
+        return await self._get("/api/smart")

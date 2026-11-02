@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -166,6 +167,37 @@ SENSORS: tuple[SlimstroomSensorDescription, ...] = (
 )
 
 
+def _ts(v: Any) -> datetime | None:
+    return datetime.fromtimestamp(int(v), timezone.utc) if v else None
+
+
+# ---- slimme momenten: alleen aangemaakt als de klant ze aanzet ----
+SMART_SENSORS: tuple[SlimstroomSensorDescription, ...] = (
+    SlimstroomSensorDescription(
+        key="smart_price_tier", translation_key="smart_price_tier",
+        device_class=SensorDeviceClass.ENUM,
+        options=["goedkoop", "normaal", "duur"],
+        value_fn=lambda c: c.smart().get("price_tier_now"),
+    ),
+    SlimstroomSensorDescription(
+        key="smart_best_2h_start", translation_key="smart_best_2h_start",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda c: _ts((c.smart().get("best_2h") or {}).get("start")),
+    ),
+    SlimstroomSensorDescription(
+        key="smart_negative_next", translation_key="smart_negative_next",
+        device_class=SensorDeviceClass.TIMESTAMP,
+        value_fn=lambda c: _ts((c.smart().get("negative_price") or {}).get("next_start")),
+    ),
+    SlimstroomSensorDescription(
+        key="smart_heating", translation_key="smart_heating",
+        device_class=SensorDeviceClass.ENUM,
+        options=["bijstoken", "normaal", "temperen"],
+        value_fn=lambda c: (c.smart().get("heating") or {}).get("advice"),
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
@@ -175,6 +207,30 @@ async def async_setup_entry(
     async_add_entities(
         SlimstroomSensor(coordinator, entry, d) for d in SENSORS
     )
+    # Slimme momenten: de generieke sensoren plus per apparaat een
+    # "beste start"-tijdstip en de besparing. Alleen zodra de klant ze
+    # aanzet (de API zegt enabled: false tot die tijd); apparaten die
+    # er later bijkomen verschijnen bij de volgende verversing.
+    known: set[str] = set()
+
+    def _sync() -> None:
+        if not coordinator.smart_enabled():
+            return
+        new: list[SensorEntity] = []
+        if "_generic" not in known:
+            known.add("_generic")
+            new.extend(SlimstroomSensor(coordinator, entry, d) for d in SMART_SENSORS)
+        for load in coordinator.smart().get("loads") or []:
+            lid = str(load.get("id") or "")
+            if lid and lid not in known:
+                known.add(lid)
+                new.append(SmartLoadSensor(coordinator, entry, lid, "start"))
+                new.append(SmartLoadSensor(coordinator, entry, lid, "saving"))
+        if new:
+            async_add_entities(new)
+
+    _sync()
+    entry.async_on_unload(coordinator.async_add_listener(_sync))
 
 
 class SlimstroomSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity):
@@ -203,3 +259,58 @@ class SlimstroomSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntit
     @property
     def native_value(self) -> Any:
         return self.entity_description.value_fn(self.coordinator)
+
+
+class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity):
+    """Per apparaat: beste starttijd (timestamp, met venster-einde, reden
+    en 'verwachting' als attributen) of de besparing in euro."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: MijnSlimstroomCoordinator, entry: ConfigEntry,
+                 load_id: str, what: str) -> None:
+        super().__init__(coordinator)
+        self._load_id = load_id
+        self._what = what
+        site = entry.data.get("site_id") or entry.entry_id
+        self._attr_unique_id = f"{site}_smart_{load_id}_{what}"
+        self._attr_translation_key = f"smart_load_{what}"
+        self._attr_translation_placeholders = {"load": self._load_name()}
+        if what == "start":
+            self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        else:
+            self._attr_device_class = SensorDeviceClass.MONETARY
+            self._attr_native_unit_of_measurement = "EUR"
+            self._attr_suggested_display_precision = 2
+        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, site)})
+
+    def _load(self) -> dict:
+        return self.coordinator.smart_load(self._load_id) or {}
+
+    def _load_name(self) -> str:
+        return str(self._load().get("name") or self._load_id)
+
+    @property
+    def native_value(self) -> Any:
+        l = self._load()
+        if not l.get("available"):
+            return None
+        if self._what == "saving":
+            return l.get("saving_eur")
+        wins = l.get("windows") or []
+        return _ts(wins[0]["start"]) if wins else None
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any]:
+        l = self._load()
+        wins = l.get("windows") or []
+        return {
+            "apparaat": self._load_name(),
+            "venster_einde": _ts(wins[0]["end"]).isoformat() if wins else None,
+            "vensters": [{"start": _ts(w["start"]).isoformat(), "einde": _ts(w["end"]).isoformat()} for w in wins],
+            "reden": l.get("reason"),
+            "verwachting": bool(l.get("forecast")),
+            "nu_gunstig": bool(l.get("active_now")),
+            "kosten_eur": l.get("cost_eur"),
+            "kosten_nu_eur": l.get("cost_now_eur"),
+        }

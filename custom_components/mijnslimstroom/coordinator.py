@@ -60,6 +60,7 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
             ("pricing", self.api.pricing_today),
             ("pricing_config", self.api.pricing_config),
             ("forecast", self.api.forecast),
+            ("smart", self.api.smart),
         ):
             try:
                 self._slow[key] = await fetch()
@@ -140,4 +141,18 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
                 continue
             if start <= now < start + timedelta(seconds=s.get("duration_sec", 900)):
                 return s.get("action")
+        return None
+
+    # ---- slimme momenten (Account > Slimme apparaten, standaard uit) ----
+
+    def smart(self) -> dict:
+        return self._slow.get("smart") or {}
+
+    def smart_enabled(self) -> bool:
+        return bool(self.smart().get("enabled"))
+
+    def smart_load(self, load_id: str) -> dict | None:
+        for l in self.smart().get("loads") or []:
+            if l.get("id") == load_id:
+                return l
         return None

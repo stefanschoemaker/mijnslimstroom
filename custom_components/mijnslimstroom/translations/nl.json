@@ -80,6 +80,42 @@
       },
       "export_price": {
         "name": "Terugleverprijs"
+      },
+      "smart_price_tier": {
+        "name": "Stroomprijs nu",
+        "state": {
+          "goedkoop": "Goedkoop",
+          "normaal": "Normaal",
+          "duur": "Duur"
+        }
+      },
+      "smart_best_2h_start": {
+        "name": "Goedkoopste 2 uur start"
+      },
+      "smart_negative_next": {
+        "name": "Volgende negatieve prijs"
+      },
+      "smart_heating": {
+        "name": "Verwarmingsadvies",
+        "state": {
+          "bijstoken": "Bijstoken",
+          "normaal": "Normaal",
+          "temperen": "Temperen"
+        }
+      },
+      "smart_load_start": {
+        "name": "{load} beste start"
+      },
+      "smart_load_saving": {
+        "name": "{load} besparing"
+      }
+    },
+    "binary_sensor": {
+      "smart_negative_now": {
+        "name": "Negatieve prijs nu"
+      },
+      "smart_load_active": {
+        "name": "{load} nu gunstig"
       }
     }
   }
