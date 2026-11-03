@@ -108,6 +108,12 @@
       },
       "smart_load_saving": {
         "name": "{load} saving"
+      },
+      "smart_load_last_saving": {
+        "name": "{load} last saving"
+      },
+      "smart_load_followed": {
+        "name": "{load} on recommended moment"
       }
     },
     "binary_sensor": {
@@ -116,6 +122,56 @@
       },
       "smart_load_active": {
         "name": "{load} good moment now"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Report runs",
+        "description": "Pick a smart device from the app to link the entities that tell the integration when it ran and what it used. Choose Done to save.",
+        "data": {
+          "load": "Device"
+        }
+      },
+      "load": {
+        "title": "{load}",
+        "description": "Running entity: a switch, binary sensor or status sensor that is on/run while {load} runs. Energy entity: a kWh total or a power in W (a smart plug, for instance). Without a running entity, power above the threshold means running. Leave both empty to unlink the device.",
+        "data": {
+          "running_entity": "Running entity",
+          "energy_entity": "Energy entity (kWh or W)",
+          "threshold_w": "Threshold for 'running' (W, power sensor only)"
+        }
+      }
+    },
+    "error": {
+      "kwh_needs_running": "A kWh total does not tell when the device runs: add a running entity, or use a power sensor (W)."
+    },
+    "abort": {
+      "no_smart_loads": "No smart devices yet: switch them on in the app under Account > Slimme apparaten first (the integration sees it within five minutes)."
+    }
+  },
+  "services": {
+    "meld_apparaat": {
+      "name": "Report run",
+      "description": "Tells Mijn SlimStroom that a smart device ran, for your own automations without the link in the options.",
+      "fields": {
+        "load_id": {
+          "name": "Device id",
+          "description": "The device id as in the app (for example boiler)."
+        },
+        "started_at": {
+          "name": "Started at",
+          "description": "Start of the run."
+        },
+        "ended_at": {
+          "name": "Ended at",
+          "description": "End of the run; empty = still running."
+        },
+        "kwh": {
+          "name": "Energy (kWh)",
+          "description": "Measured energy of this run; empty = estimate from the settings."
+        }
       }
     }
   }

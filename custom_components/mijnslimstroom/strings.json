@@ -108,6 +108,12 @@
       },
       "smart_load_saving": {
         "name": "{load} besparing"
+      },
+      "smart_load_last_saving": {
+        "name": "{load} laatste besparing"
+      },
+      "smart_load_followed": {
+        "name": "{load} op aanbevolen moment"
       }
     },
     "binary_sensor": {
@@ -116,6 +122,56 @@
       },
       "smart_load_active": {
         "name": "{load} nu gunstig"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Draaibeurten terugmelden",
+        "description": "Kies een slim apparaat uit de app om er de entiteiten aan te koppelen waarmee de integratie meldt wanneer het draaide en wat het verbruikte. Kies Klaar om op te slaan.",
+        "data": {
+          "load": "Apparaat"
+        }
+      },
+      "load": {
+        "title": "{load}",
+        "description": "Loopt-entiteit: een schakelaar, binaire sensor of statussensor die aan/run staat zolang {load} draait. Energie-entiteit: een kWh-teller of een vermogen in W (bijvoorbeeld een slimme stekker). Zonder loopt-entiteit geldt: vermogen boven de drempel = draait. Beide leeg laten koppelt het apparaat los.",
+        "data": {
+          "running_entity": "Loopt-entiteit",
+          "energy_entity": "Energie-entiteit (kWh of W)",
+          "threshold_w": "Drempel voor 'draait' (W, alleen bij een vermogenssensor)"
+        }
+      }
+    },
+    "error": {
+      "kwh_needs_running": "Een kWh-teller zegt niet wanneer het apparaat draait: kies ook een loopt-entiteit, of een vermogenssensor (W)."
+    },
+    "abort": {
+      "no_smart_loads": "Nog geen slimme apparaten: zet ze eerst aan in de app onder Account > Slimme apparaten (de integratie ziet dat binnen vijf minuten)."
+    }
+  },
+  "services": {
+    "meld_apparaat": {
+      "name": "Draaibeurt melden",
+      "description": "Meldt aan Mijn SlimStroom dat een slim apparaat heeft gedraaid, voor eigen automatiseringen zonder de koppeling in de opties.",
+      "fields": {
+        "load_id": {
+          "name": "Apparaat-id",
+          "description": "De id van het apparaat zoals in de app (bijvoorbeeld boiler)."
+        },
+        "started_at": {
+          "name": "Gestart om",
+          "description": "Begin van de draaibeurt."
+        },
+        "ended_at": {
+          "name": "Gestopt om",
+          "description": "Einde van de draaibeurt; leeg = loopt nog."
+        },
+        "kwh": {
+          "name": "Verbruik (kWh)",
+          "description": "Gemeten verbruik van deze draaibeurt; leeg = schatting uit de instellingen."
+        }
       }
     }
   }

@@ -65,6 +65,34 @@ Voorbeeld-automatisering: de vaatwasser starten zodra het plan
 "laden" zegt (goedkope stroom) of het huis waarschuwen bij "ontladen"
 (dure stroom).
 
+#### Draaibeurten terugmelden (vanaf 1.2.0)
+
+De integratie kan ook terugmelden wanneer een slim apparaat echt
+draaide en wat het verbruikte. Ga naar **Instellingen > Apparaten en
+diensten > Mijn SlimStroom > Configureren**, kies het apparaat en
+koppel:
+
+- een **loopt-entiteit** (schakelaar, binaire sensor of statussensor
+  die aan/run staat zolang het apparaat draait), en/of
+- een **energie-entiteit**: een kWh-teller of een vermogen in W
+  (slimme stekker). Zonder loopt-entiteit geldt: vermogen boven de
+  drempel (standaard 50 W) = draait.
+
+Elke draaibeurt (langer dan twee minuten) wordt aan de app gemeld: bij
+de start en bij het einde met de gemeten kWh. De app laat per apparaat
+zien of het op het aanbevolen moment draaide en wat dat bespaarde; na
+drie gemeten draaibeurten vervangen het gemeten verbruik en de gemeten
+draaitijd de ingestelde waarden (uit te zetten per apparaat in de app).
+
+| Entiteit | Wat het is |
+|---|---|
+| *Apparaat* laatste besparing | wat de laatste draaibeurt bespaarde ten opzichte van het duurste moment van die dag |
+| *Apparaat* op aanbevolen moment | percentage van de draaibeurten (30 dagen) dat in een aanbevolen venster startte; attributen: aantal keren, kWh, loopt sinds |
+
+Eigen automatisering zonder koppeling: de actie
+`mijnslimstroom.meld_apparaat` met `load_id`, `started_at` en
+optioneel `ended_at` en `kwh`.
+
 ## Android-app
 
 De Android-versie van de Mijn SlimStroom-app staat onder

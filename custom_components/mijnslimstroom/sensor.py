@@ -224,8 +224,8 @@ async def async_setup_entry(
             lid = str(load.get("id") or "")
             if lid and lid not in known:
                 known.add(lid)
-                new.append(SmartLoadSensor(coordinator, entry, lid, "start"))
-                new.append(SmartLoadSensor(coordinator, entry, lid, "saving"))
+                for what in ("start", "saving", "last_saving", "followed"):
+                    new.append(SmartLoadSensor(coordinator, entry, lid, what))
         if new:
             async_add_entities(new)
 
@@ -278,6 +278,9 @@ class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity
         self._attr_translation_placeholders = {"load": self._load_name()}
         if what == "start":
             self._attr_device_class = SensorDeviceClass.TIMESTAMP
+        elif what == "followed":
+            self._attr_native_unit_of_measurement = "%"
+            self._attr_state_class = SensorStateClass.MEASUREMENT
         else:
             self._attr_device_class = SensorDeviceClass.MONETARY
             self._attr_native_unit_of_measurement = "EUR"
@@ -290,9 +293,17 @@ class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity
     def _load_name(self) -> str:
         return str(self._load().get("name") or self._load_id)
 
+    def _stats(self) -> dict:
+        return self._load().get("stats") or {}
+
     @property
     def native_value(self) -> Any:
         l = self._load()
+        if self._what == "last_saving":
+            last = self._stats().get("last_run") or {}
+            return last.get("saving_eur")
+        if self._what == "followed":
+            return self._stats().get("followed_pct")
         if not l.get("available"):
             return None
         if self._what == "saving":
@@ -304,6 +315,25 @@ class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity
     def extra_state_attributes(self) -> dict[str, Any]:
         l = self._load()
         wins = l.get("windows") or []
+        if self._what in ("last_saving", "followed"):
+            st = self._stats()
+            last = st.get("last_run") or {}
+            return {
+                "apparaat": self._load_name(),
+                "dagen": st.get("days"),
+                "keren_gedraaid": st.get("runs"),
+                "keren_gemeten": st.get("measured"),
+                "op_aanbevolen_moment": st.get("followed"),
+                "besparing_eur": st.get("saving_eur"),
+                "kwh": st.get("kwh"),
+                "loopt_sinds": _ts(st["running_since"]).isoformat() if st.get("running_since") else None,
+                "laatste_start": _ts(last["started_at"]).isoformat() if last.get("started_at") else None,
+                "laatste_kwh": last.get("kwh"),
+                "laatste_op_aanbevolen_moment": last.get("in_window"),
+                "gekalibreerd": bool(l.get("calibrated")),
+                "vermogen_kw": l.get("effective_power_kw"),
+                "draaitijd_min": l.get("effective_duration_min"),
+            }
         return {
             "apparaat": self._load_name(),
             "venster_einde": _ts(wins[0]["end"]).isoformat() if wins else None,

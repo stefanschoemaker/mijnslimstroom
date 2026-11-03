@@ -94,6 +94,32 @@ class MijnSlimstroomApi:
                 f"GET {path} mislukt: {type(e).__name__}: {e}"
             ) from e
 
+    async def _post(self, path: str, body: dict, *, _retried: bool = False) -> Any:
+        if self._token is None or time.monotonic() >= self._token_expires:
+            await self.login()
+        try:
+            async with self._session.post(
+                f"{self._base_url}{path}",
+                json=body,
+                headers={"Authorization": f"Bearer {self._token}"},
+                timeout=aiohttp.ClientTimeout(total=20),
+            ) as r:
+                if r.status == 401:
+                    if _retried:
+                        raise InvalidAuth("token en herlogin geweigerd")
+                    self._token = None
+                    return await self._post(path, body, _retried=True)
+                if r.status >= 400:
+                    detail = (await r.text())[:200]
+                    raise MijnSlimstroomError(f"POST {path}: {r.status} {detail}")
+                return await r.json()
+        except (InvalidAuth, MijnSlimstroomError):
+            raise
+        except Exception as e:  # noqa: BLE001
+            raise MijnSlimstroomError(
+                f"POST {path} mislukt: {type(e).__name__}: {e}"
+            ) from e
+
     async def live(self) -> dict:
         return await self._get("/api/live")
 
@@ -116,3 +142,14 @@ class MijnSlimstroomApi:
         """Slimme momenten: {"enabled": false} zolang de klant ze niet
         aanzet in de app (Account > Slimme apparaten)."""
         return await self._get("/api/smart")
+
+    async def report_run(self, load_id: str, started_at: int, ended_at: int | None,
+                         kwh: float | None, source: str = "ha") -> dict:
+        """Een draaibeurt melden: bij de start (ended_at None) en nog
+        eens bij het einde met de meting; de server voegt ze samen."""
+        return await self._post("/api/smart/runs", {
+            "load_id": load_id, "started_at": int(started_at),
+            "ended_at": int(ended_at) if ended_at is not None else None,
+            "kwh": round(float(kwh), 3) if kwh is not None else None,
+            "source": source,
+        })

@@ -1,0 +1,27 @@
+meld_apparaat:
+  fields:
+    load_id:
+      required: true
+      example: boiler
+      selector:
+        text:
+    started_at:
+      required: true
+      example: "2026-11-03 12:30:00"
+      selector:
+        datetime:
+    ended_at:
+      required: false
+      example: "2026-11-03 14:00:00"
+      selector:
+        datetime:
+    kwh:
+      required: false
+      example: 1.2
+      selector:
+        number:
+          min: 0
+          max: 200
+          step: 0.01
+          unit_of_measurement: kWh
+          mode: box
