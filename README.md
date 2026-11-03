@@ -40,6 +40,27 @@ Home Assistant de kosten met dezelfde tarieven als de app.
 | Terugleverprijs | EUR/kWh | wat teruglevering nu oplevert (saldering/vast/dynamisch) |
 | Batterijplan | laden / ontladen / rust | automatiseer op wat de batterij NU doet |
 
+#### Slimme momenten (vanaf 1.1.0, alleen als u ze aanzet in de app)
+
+Zet in de app **Account > Slimme apparaten** de slimme momenten aan en
+voeg uw apparaten toe (boiler, vaatwasser, pomp, ...). De integratie
+maakt dan extra entiteiten aan:
+
+| Entiteit | Wat het is |
+|---|---|
+| Stroomprijs nu | goedkoop / normaal / duur, ten opzichte van de komende 24 uur |
+| Goedkoopste 2 uur start | begin van de goedkoopste twee uur in de komende 24 uur |
+| Negatieve prijs nu / Volgende negatieve prijs | de uren waarin stroom geld oplevert |
+| Verwarmingsadvies | bijstoken / normaal / temperen (als u het advies aanzet) |
+| *Apparaat* nu gunstig | aan zolang het aanbevolen venster loopt: start hierop uw automatisering |
+| *Apparaat* beste start | starttijd van het aanbevolen venster (attributen: einde, reden, verwachting) |
+| *Apparaat* besparing | wat het venster scheelt ten opzichte van nu starten, in euro |
+
+Voorbeeld: automatisering "als *Boiler nu gunstig* aan gaat, zet de
+boiler-boost aan". De aanbevelingen volgen de planning van uw batterij
+en zijn na de bekende dagprijzen een verwachting (attribuut
+`verwachting`).
+
 Voorbeeld-automatisering: de vaatwasser starten zodra het plan
 "laden" zegt (goedkope stroom) of het huis waarschuwen bij "ontladen"
 (dure stroom).

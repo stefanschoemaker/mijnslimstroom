@@ -80,6 +80,42 @@
       },
       "export_price": {
         "name": "Feed-in price"
+      },
+      "smart_price_tier": {
+        "name": "Electricity price now",
+        "state": {
+          "goedkoop": "Cheap",
+          "normaal": "Normal",
+          "duur": "Expensive"
+        }
+      },
+      "smart_best_2h_start": {
+        "name": "Cheapest 2 hours start"
+      },
+      "smart_negative_next": {
+        "name": "Next negative price"
+      },
+      "smart_heating": {
+        "name": "Heating advice",
+        "state": {
+          "bijstoken": "Boost",
+          "normaal": "Normal",
+          "temperen": "Reduce"
+        }
+      },
+      "smart_load_start": {
+        "name": "{load} best start"
+      },
+      "smart_load_saving": {
+        "name": "{load} saving"
+      }
+    },
+    "binary_sensor": {
+      "smart_negative_now": {
+        "name": "Negative price now"
+      },
+      "smart_load_active": {
+        "name": "{load} good moment now"
       }
     }
   }

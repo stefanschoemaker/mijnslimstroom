@@ -17,7 +17,7 @@ from .api import InvalidAuth, MijnSlimstroomApi, MijnSlimstroomError
 from .const import DOMAIN
 from .coordinator import MijnSlimstroomCoordinator
 
-PLATFORMS = [Platform.SENSOR]
+PLATFORMS = [Platform.SENSOR, Platform.BINARY_SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:

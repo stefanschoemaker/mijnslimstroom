@@ -50,6 +50,44 @@
       },
       "export_price": {
         "default": "mdi:transmission-tower-export"
+      },
+      "smart_price_tier": {
+        "default": "mdi:cash-clock",
+        "state": {
+          "goedkoop": "mdi:cash-check",
+          "duur": "mdi:cash-remove"
+        }
+      },
+      "smart_best_2h_start": {
+        "default": "mdi:clock-star-four-points"
+      },
+      "smart_negative_next": {
+        "default": "mdi:cash-refund"
+      },
+      "smart_heating": {
+        "default": "mdi:thermostat",
+        "state": {
+          "bijstoken": "mdi:thermometer-plus",
+          "temperen": "mdi:thermometer-minus"
+        }
+      },
+      "smart_load_start": {
+        "default": "mdi:clock-start"
+      },
+      "smart_load_saving": {
+        "default": "mdi:piggy-bank-outline"
+      }
+    },
+    "binary_sensor": {
+      "smart_negative_now": {
+        "default": "mdi:cash-refund"
+      },
+      "smart_load_active": {
+        "default": "mdi:play-circle-outline",
+        "state": {
+          "on": "mdi:play-circle",
+          "off": "mdi:pause-circle-outline"
+        }
       }
     }
   }
