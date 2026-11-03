@@ -76,6 +76,12 @@
       },
       "smart_load_saving": {
         "default": "mdi:piggy-bank-outline"
+      },
+      "smart_load_last_saving": {
+        "default": "mdi:piggy-bank"
+      },
+      "smart_load_followed": {
+        "default": "mdi:check-decagram-outline"
       }
     },
     "binary_sensor": {
@@ -89,6 +95,11 @@
           "off": "mdi:pause-circle-outline"
         }
       }
+    }
+  },
+  "services": {
+    "meld_apparaat": {
+      "service": "mdi:clipboard-text-clock-outline"
     }
   }
 }
