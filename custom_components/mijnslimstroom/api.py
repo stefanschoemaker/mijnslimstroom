@@ -143,6 +143,12 @@ class MijnSlimstroomApi:
         aanzet in de app (Account > Slimme apparaten)."""
         return await self._get("/api/smart")
 
+    async def report_meters(self, readings: list[dict]) -> dict:
+        """Tellerstanden (kWh) van warmtepomp, laadpaal of extra
+        zonnepanelen; de server neemt per meter hooguit een stand per
+        minuut aan."""
+        return await self._post("/api/meters", {"readings": readings})
+
     async def report_run(self, load_id: str, started_at: int, ended_at: int | None,
                          kwh: float | None, source: str = "ha") -> dict:
         """Een draaibeurt melden: bij de start (ended_at None) en nog

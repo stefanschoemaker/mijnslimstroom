@@ -128,6 +128,13 @@
   "options": {
     "step": {
       "init": {
+        "title": "Terugmelden aan Mijn SlimStroom",
+        "menu_options": {
+          "loads": "Slimme apparaten koppelen (draaibeurten)",
+          "meters": "Meters koppelen (warmtepomp, laadpaal, zonnepanelen)"
+        }
+      },
+      "loads": {
         "title": "Draaibeurten terugmelden",
         "description": "Kies een slim apparaat uit de app om er de entiteiten aan te koppelen waarmee de integratie meldt wanneer het draaide en wat het verbruikte. Kies Klaar om op te slaan.",
         "data": {
@@ -142,10 +149,20 @@
           "energy_entity": "Energie-entiteit (kWh of W)",
           "threshold_w": "Drempel voor 'draait' (W, alleen bij een vermogenssensor)"
         }
+      },
+      "meters": {
+        "title": "Meters terugmelden",
+        "description": "Kies per meter een sensor die de totale energie in kWh telt (een oplopende teller, geen vermogen). De stand gaat elke vijf minuten naar de app; de planning voorspelt uw verbruik er beter mee. Koppel de laadpaal alleen als zijn verbruik meetelt in het huisverbruik in de app, en de zonnepanelen alleen als de app ze nog niet toont. Een veld leegmaken koppelt de meter los.",
+        "data": {
+          "heatpump": "Warmtepomp",
+          "ev_charger": "Laadpaal",
+          "solar": "Zonnepanelen die de installatie niet zelf meet"
+        }
       }
     },
     "error": {
-      "kwh_needs_running": "Een kWh-teller zegt niet wanneer het apparaat draait: kies ook een loopt-entiteit, of een vermogenssensor (W)."
+      "kwh_needs_running": "Een kWh-teller zegt niet wanneer het apparaat draait: kies ook een loopt-entiteit, of een vermogenssensor (W).",
+      "meter_needs_kwh": "Kies een sensor met een energieteller in kWh (geen vermogen in W)."
     },
     "abort": {
       "no_smart_loads": "Nog geen slimme apparaten: zet ze eerst aan in de app onder Account > Slimme apparaten (de integratie ziet dat binnen vijf minuten)."

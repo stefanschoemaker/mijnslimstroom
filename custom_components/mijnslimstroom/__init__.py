@@ -22,6 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .api import InvalidAuth, MijnSlimstroomApi, MijnSlimstroomError
 from .const import DOMAIN, SERVICE_REPORT_RUN
 from .coordinator import MijnSlimstroomCoordinator
+from .meters import MeterReporter
 from .tracker import RunTracker
 
 _LOGGER = logging.getLogger(__name__)
@@ -60,6 +61,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     tracker = RunTracker(hass, entry, api)
     await tracker.async_start()
     entry.async_on_unload(tracker.async_stop)
+    meters = MeterReporter(hass, entry, api)
+    await meters.async_start()
+    entry.async_on_unload(meters.async_stop)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
 
     async def _report(call: ServiceCall) -> None:

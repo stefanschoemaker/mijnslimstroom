@@ -25,3 +25,11 @@ DEFAULT_THRESHOLD_W = 50
 # Een draaibeurt korter dan dit is een schakelglitch, geen draaibeurt.
 MIN_RUN_SECONDS = 120
 SERVICE_REPORT_RUN = "meld_apparaat"
+
+# Meters terugmelden (opties > Meters koppelen): per meter een sensor
+# met de totale energie in kWh. Zie meters.py.
+OPT_METERS = "meters"
+METERS = ("heatpump", "ev_charger", "solar")
+METER_INTERVAL_SECONDS = 300
+# Een stilstaande teller toch af en toe melden, zodat de reeks doorloopt.
+METER_REPEAT_SECONDS = 1800

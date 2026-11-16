@@ -343,4 +343,7 @@ class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity
             "nu_gunstig": bool(l.get("active_now")),
             "kosten_eur": l.get("cost_eur"),
             "kosten_nu_eur": l.get("cost_now_eur"),
+            "uiterlijk": _ts(l["due_at"]).isoformat() if l.get("due_at") else None,
+            "op_zijn_vroegst": _ts(l["earliest_at"]).isoformat() if l.get("earliest_at") else None,
+            "laatste_beurt": _ts(l["last_run_at"]).isoformat() if l.get("last_run_at") else None,
         }

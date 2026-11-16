@@ -128,6 +128,13 @@
   "options": {
     "step": {
       "init": {
+        "title": "Report back to Mijn SlimStroom",
+        "menu_options": {
+          "loads": "Link smart devices (runs)",
+          "meters": "Link meters (heat pump, EV charger, solar)"
+        }
+      },
+      "loads": {
         "title": "Report runs",
         "description": "Pick a smart device from the app to link the entities that tell the integration when it ran and what it used. Choose Done to save.",
         "data": {
@@ -142,10 +149,20 @@
           "energy_entity": "Energy entity (kWh or W)",
           "threshold_w": "Threshold for 'running' (W, power sensor only)"
         }
+      },
+      "meters": {
+        "title": "Report meters",
+        "description": "Pick for each meter a sensor that counts total energy in kWh (a rising counter, not power). The reading is sent to the app every five minutes; the planner uses it to forecast your consumption. Link the EV charger only if its consumption is part of the house consumption in the app, and solar only if the app does not show those panels yet. Clearing a field unlinks the meter.",
+        "data": {
+          "heatpump": "Heat pump",
+          "ev_charger": "EV charger",
+          "solar": "Solar panels the installation does not measure"
+        }
       }
     },
     "error": {
-      "kwh_needs_running": "A kWh total does not tell when the device runs: add a running entity, or use a power sensor (W)."
+      "kwh_needs_running": "A kWh total does not tell when the device runs: add a running entity, or use a power sensor (W).",
+      "meter_needs_kwh": "Pick a sensor with an energy counter in kWh (not power in W)."
     },
     "abort": {
       "no_smart_loads": "No smart devices yet: switch them on in the app under Account > Slimme apparaten first (the integration sees it within five minutes)."
