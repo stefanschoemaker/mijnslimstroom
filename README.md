@@ -9,6 +9,9 @@ stroomprijzen.
 Haal je live energiestromen, dagtotalen, saldo, de actuele stroomprijs
 en het batterijplan als sensoren in Home Assistant. De integratie
 gebruikt dezelfde inloggegevens als de Mijn SlimStroom-app.
+Vanaf 1.3.1 meldt de integratie bij elk verzoek dat het Home Assistant
+is en welke versie draait, zodat wij haar verkeer kunnen onderscheiden
+van iemand die de app gebruikt.
 
 ### Installatie
 

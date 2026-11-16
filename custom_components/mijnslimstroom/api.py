@@ -15,7 +15,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import BASE_URL
+from .const import BASE_URL, CLIENT_HEADERS
 
 
 class MijnSlimstroomError(Exception):
@@ -50,6 +50,7 @@ class MijnSlimstroomApi:
             async with self._session.post(
                 f"{self._base_url}/api/auth/login",
                 json={"username": self._username, "password": self._password},
+                headers=CLIENT_HEADERS,
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as r:
                 if r.status == 401:
@@ -75,7 +76,7 @@ class MijnSlimstroomApi:
         try:
             async with self._session.get(
                 f"{self._base_url}{path}",
-                headers={"Authorization": f"Bearer {self._token}"},
+                headers={**CLIENT_HEADERS, "Authorization": f"Bearer {self._token}"},
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as r:
                 if r.status == 401:
@@ -101,7 +102,7 @@ class MijnSlimstroomApi:
             async with self._session.post(
                 f"{self._base_url}{path}",
                 json=body,
-                headers={"Authorization": f"Bearer {self._token}"},
+                headers={**CLIENT_HEADERS, "Authorization": f"Bearer {self._token}"},
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as r:
                 if r.status == 401:

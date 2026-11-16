@@ -33,3 +33,6 @@ METERS = ("heatpump", "ev_charger", "solar")
 METER_INTERVAL_SECONDS = 300
 # Een stilstaande teller toch af en toe melden, zodat de reeks doorloopt.
 METER_REPEAT_SECONDS = 1800
+
+VERSION = "1.3.1"
+CLIENT_HEADERS = {"X-Client": "home-assistant", "X-Client-Version": VERSION}
