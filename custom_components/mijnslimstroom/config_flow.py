@@ -29,8 +29,10 @@ from .const import (
     CONF_SITE_ID,
     DEFAULT_THRESHOLD_W,
     DOMAIN,
+    METERS,
     OPT_ENERGY_ENTITY,
     OPT_LOADS,
+    OPT_METERS,
     OPT_RUNNING_ENTITY,
     OPT_THRESHOLD_W,
 )
@@ -127,10 +129,11 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class MijnSlimstroomOptionsFlow(OptionsFlow):
-    """Per slim apparaat (uit de app) de entiteiten kiezen waarmee de
-    integratie draaibeurten terugmeldt: een loopt-entiteit en/of een
-    energie-entiteit (kWh-teller of W-vermogen). Stap 1 kiest het
-    apparaat, stap 2 de entiteiten; "Klaar" slaat alles op."""
+    """Menu met twee wegen. Slimme apparaten: per apparaat (uit de app)
+    de entiteiten waarmee de integratie draaibeurten terugmeldt, een
+    loopt-entiteit en/of een energie-entiteit; "Klaar" slaat op.
+    Meters: per meter (warmtepomp, laadpaal, extra zonnepanelen) een
+    kWh-teller waarvan de stand elke vijf minuten wordt doorgegeven."""
 
     def __init__(self) -> None:
         self._options: dict[str, Any] = {}
@@ -142,11 +145,48 @@ class MijnSlimstroomOptionsFlow(OptionsFlow):
             return []
         return list(coordinator.smart().get("loads") or [])
 
+    def _init_options(self) -> None:
+        if not self._options:
+            cur = self.config_entry.options or {}
+            self._options = {OPT_LOADS: dict(cur.get(OPT_LOADS) or {}),
+                             OPT_METERS: dict(cur.get(OPT_METERS) or {})}
+
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        if not self._options:
-            self._options = {OPT_LOADS: dict((self.config_entry.options or {}).get(OPT_LOADS) or {})}
+        self._init_options()
+        return self.async_show_menu(step_id="init", menu_options=["loads", "meters"])
+
+    async def async_step_meters(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        self._init_options()
+        errors: dict[str, str] = {}
+        current = dict(self._options[OPT_METERS])
+        if user_input is not None:
+            chosen = {m: user_input.get(m) or None for m in METERS}
+            for meter, entity_id in chosen.items():
+                if not entity_id:
+                    continue
+                st = self.hass.states.get(entity_id)
+                unit = str((st.attributes.get("unit_of_measurement") if st else "") or "").lower()
+                if unit not in ("kwh", "wh", "mwh"):
+                    errors[meter] = "meter_needs_kwh"
+            if not errors:
+                self._options[OPT_METERS] = {m: e for m, e in chosen.items() if e}
+                return self.async_create_entry(title="", data=self._options)
+            current = chosen
+        schema = vol.Schema({
+            vol.Optional(m, description={"suggested_value": current.get(m)}):
+                EntitySelector(EntitySelectorConfig(domain="sensor", device_class="energy"))
+            for m in METERS
+        })
+        return self.async_show_form(step_id="meters", data_schema=schema, errors=errors)
+
+    async def async_step_loads(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        self._init_options()
         loads = self._loads()
         if not loads:
             return self.async_abort(reason="no_smart_loads")
@@ -164,7 +204,7 @@ class MijnSlimstroomOptionsFlow(OptionsFlow):
             for l in loads
         ] + [SelectOptionDict(value="_done", label="Klaar")]
         return self.async_show_form(
-            step_id="init",
+            step_id="loads",
             data_schema=vol.Schema({
                 vol.Required("load"): SelectSelector(
                     SelectSelectorConfig(options=options, mode=SelectSelectorMode.LIST)),
@@ -183,7 +223,7 @@ class MijnSlimstroomOptionsFlow(OptionsFlow):
             energy = user_input.get(OPT_ENERGY_ENTITY)
             if not running and not energy:
                 self._options[OPT_LOADS].pop(self._load_id, None)
-                return await self.async_step_init()
+                return await self.async_step_loads()
             if not running:
                 st = self.hass.states.get(energy)
                 unit = str((st.attributes.get("unit_of_measurement") if st else "") or "").lower()
@@ -195,7 +235,7 @@ class MijnSlimstroomOptionsFlow(OptionsFlow):
                     OPT_ENERGY_ENTITY: energy or None,
                     OPT_THRESHOLD_W: int(user_input.get(OPT_THRESHOLD_W) or DEFAULT_THRESHOLD_W),
                 }
-                return await self.async_step_init()
+                return await self.async_step_loads()
             current = user_input
         schema = vol.Schema({
             vol.Optional(OPT_RUNNING_ENTITY, description={"suggested_value": current.get(OPT_RUNNING_ENTITY)}):

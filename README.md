@@ -65,6 +65,27 @@ Voorbeeld-automatisering: de vaatwasser starten zodra het plan
 "laden" zegt (goedkope stroom) of het huis waarschuwen bij "ontladen"
 (dure stroom).
 
+#### Meters terugmelden (vanaf 1.3.0)
+
+Onder **Configureren > Meters koppelen** wijst u per meter een sensor
+aan die de totale energie in kWh telt (een oplopende teller, geen
+vermogen). De integratie stuurt de stand elke vijf minuten naar de app.
+
+| Meter | Waarvoor de planning hem gebruikt |
+|---|---|
+| Warmtepomp | het verbruik van de warmtepomp wordt apart voorspeld, op de buitentemperatuur (na twee weken meterstanden) |
+| Laadpaal | laadbeurten tellen niet mee als gewoon huisverbruik (voor installaties zonder evcc) |
+| Zonnepanelen die de installatie niet zelf meet | bijvoorbeeld een bestaande omvormer zonder eigen meter |
+
+Koppel de laadpaal alleen als zijn verbruik meetelt in het
+huisverbruik in de app, en de zonnepanelen alleen als de app ze nog
+niet toont.
+
+Apparaten die in de app op *eens per week of per twee weken* staan
+(bijvoorbeeld de legionellabeurt) krijgen drie extra attributen op hun
+"volgende start"-sensor: `uiterlijk`, `op_zijn_vroegst` en
+`laatste_beurt`.
+
 #### Draaibeurten terugmelden (vanaf 1.2.0)
 
 De integratie kan ook terugmelden wanneer een slim apparaat echt
