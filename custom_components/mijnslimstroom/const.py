@@ -34,5 +34,9 @@ METER_INTERVAL_SECONDS = 300
 # Een stilstaande teller toch af en toe melden, zodat de reeks doorloopt.
 METER_REPEAT_SECONDS = 1800
 
-VERSION = "1.3.1"
+# Prijzen vanaf vandaag 00:00: de bekende dagprijzen en daarna de
+# prijsverwachting, zover die reikt (de server kapt lege dagen af).
+PRICE_DAYS = 4
+
+VERSION = "1.4.0"
 CLIENT_HEADERS = {"X-Client": "home-assistant", "X-Client-Version": VERSION}

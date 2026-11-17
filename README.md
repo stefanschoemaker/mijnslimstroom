@@ -39,7 +39,7 @@ vandaag*; thuisbatterij = *Geladen* / *Ontladen vandaag*. Zo rekent
 Home Assistant de kosten met dezelfde tarieven als de app.
 | Zelfvoorzienend vandaag | % | per uur gemeten |
 | Saldo vandaag | EUR | verdiend minus uitgegeven |
-| Stroomprijs | EUR/kWh | actueel kwartier, inclusief leveringsmarge, energiebelasting en btw (of het vaste tarief); kaal EPEX als er geen contract is ingesteld |
+| Stroomprijs | EUR/kWh | actueel kwartier, inclusief leveringsmarge, energiebelasting en btw (of het vaste tarief); kaal EPEX als er geen contract is ingesteld; de komende prijzen staan in de attributen (vanaf 1.4.0) |
 | Terugleverprijs | EUR/kWh | wat teruglevering nu oplevert (saldering/vast/dynamisch) |
 | Batterijplan | laden / ontladen / rust | automatiseer op wat de batterij NU doet |
 
@@ -67,6 +67,46 @@ en zijn na de bekende dagprijzen een verwachting (attribuut
 Voorbeeld-automatisering: de vaatwasser starten zodra het plan
 "laden" zegt (goedkope stroom) of het huis waarschuwen bij "ontladen"
 (dure stroom).
+
+#### Prijsverwachting (vanaf 1.4.0)
+
+De sensoren **Stroomprijs** en **Stroomprijs nu** dragen de prijzen van
+vandaag en de komende dagen als attributen, in dezelfde prijs als de
+sensor zelf (inclusief leveringsmarge, energiebelasting en btw).
+
+| Attribuut | Wat het is |
+|---|---|
+| `prijzen` | lijst per kwartier vanaf vandaag 00:00: `start` (tijdstip), `prijs` (EUR/kWh) en `verwachting` (waar als het geen vastgestelde dagprijs is) |
+| `verwachting_vanaf` | vanaf dit tijdstip zijn de prijzen onze verwachting; de dagprijzen van morgen komen rond 13:00 |
+| `resolutie_min` | lengte van een blok in minuten (15) |
+| `prijs` | alleen op *Stroomprijs nu*: de prijs van dit kwartier in EUR/kWh |
+
+De lijst loopt zo ver als de verwachting reikt, meestal tot in
+overmorgen, en wordt niet in de geschiedenis van Home Assistant
+bewaard. Voorbeeld voor een sjabloon, de goedkoopste prijs die nog
+komt (vul de naam van uw eigen sensor in):
+
+```yaml
+{{ state_attr('sensor.mijn_slimstroom_stroomprijs', 'prijzen')
+   | selectattr('start', '>', now().isoformat())
+   | map(attribute='prijs') | min }}
+```
+
+Voorbeeld voor een grafiek met de kaart ApexCharts (HACS):
+
+```yaml
+type: custom:apexcharts-card
+graph_span: 48h
+span:
+  start: day
+now:
+  show: true
+series:
+  - entity: sensor.mijn_slimstroom_stroomprijs
+    type: column
+    data_generator: |
+      return entity.attributes.prijzen.map(p => [new Date(p.start).getTime(), p.prijs]);
+```
 
 #### Meters terugmelden (vanaf 1.3.0)
 

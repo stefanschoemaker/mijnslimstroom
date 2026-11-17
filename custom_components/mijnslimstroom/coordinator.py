@@ -16,11 +16,47 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .api import InvalidAuth, MijnSlimstroomApi, MijnSlimstroomError
 from .const import DOMAIN, SLOW_EVERY_N_TICKS, UPDATE_INTERVAL_SECONDS
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def import_price(epex: float, cfg: dict | None) -> float:
+    """Wat de klant per kWh betaalt bij deze beursprijs; zonder contract de kale beursprijs."""
+    if not cfg:
+        return epex
+    if cfg.get("contract") == "fixed":
+        return cfg.get("fixed_eur_per_kwh", epex)
+    margin = cfg.get("supplier_margin_eur_per_kwh") or 0.0
+    tax = cfg.get("tax_eur_per_kwh") or 0.0
+    vat = 1.0 + (cfg.get("vat_pct") or 0.0)
+    return round((epex + margin + tax) * vat, 5)
+
+
+def _iso(ts: int) -> str:
+    return dt_util.as_local(dt_util.utc_from_timestamp(ts)).isoformat()
+
+
+def price_forecast(pricing: dict | None, cfg: dict | None) -> dict[str, Any]:
+    """Attributen van de prijssensoren: de prijs per kwartier vanaf vandaag 00:00, bekend en verwacht."""
+    p = pricing or {}
+    t = p.get("t") or []
+    step = t[1] - t[0] if len(t) > 1 else 900
+    fc_from = p.get("forecast_from")
+    rows = [
+        {"start": _iso(ts), "prijs": import_price(epex, cfg),
+         "verwachting": fc_from is not None and ts >= fc_from}
+        for ts, epex in zip(t, p.get("prices_eur_per_kwh") or [])
+        if epex is not None
+    ]
+    return {
+        "prijzen": rows,
+        "verwachting_vanaf": _iso(fc_from) if fc_from is not None else None,
+        "resolutie_min": step // 60,
+    }
 
 
 class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
@@ -89,15 +125,11 @@ class MijnSlimstroomCoordinator(DataUpdateCoordinator[dict]):
         epex = prices[idx]
         if epex is None:
             return None
-        cfg = (self._slow.get("pricing_config") or {}).get("effective")
-        if not cfg:
-            return epex
-        if cfg.get("contract") == "fixed":
-            return cfg.get("fixed_eur_per_kwh", epex)
-        margin = cfg.get("supplier_margin_eur_per_kwh") or 0.0
-        tax = cfg.get("tax_eur_per_kwh") or 0.0
-        vat = 1.0 + (cfg.get("vat_pct") or 0.0)
-        return round((epex + margin + tax) * vat, 5)
+        return import_price(epex, (self._slow.get("pricing_config") or {}).get("effective"))
+
+    def price_forecast(self) -> dict[str, Any]:
+        return price_forecast(self._slow.get("pricing"),
+                              (self._slow.get("pricing_config") or {}).get("effective"))
 
     def export_price_eur_per_kwh(self) -> float | None:
         """Wat een teruggeleverde kWh nu oplevert - de export-kant van

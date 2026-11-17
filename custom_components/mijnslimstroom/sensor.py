@@ -29,6 +29,7 @@ class SlimstroomSensorDescription(SensorEntityDescription):
     """Beschrijving + waarde-extractie uit de coordinator-data."""
 
     value_fn: Callable[[MijnSlimstroomCoordinator], Any]
+    attrs_fn: Callable[[MijnSlimstroomCoordinator], dict[str, Any]] | None = None
 
 
 def _live(key: str) -> Callable[[MijnSlimstroomCoordinator], Any]:
@@ -149,6 +150,7 @@ SENSORS: tuple[SlimstroomSensorDescription, ...] = (
         native_unit_of_measurement="EUR/kWh",
         suggested_display_precision=3,
         value_fn=lambda c: c.current_price_eur_per_kwh(),
+        attrs_fn=lambda c: c.price_forecast(),
     ),
     SlimstroomSensorDescription(
         key="export_price", translation_key="export_price",
@@ -178,6 +180,7 @@ SMART_SENSORS: tuple[SlimstroomSensorDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["goedkoop", "normaal", "duur"],
         value_fn=lambda c: c.smart().get("price_tier_now"),
+        attrs_fn=lambda c: {"prijs": c.current_price_eur_per_kwh(), **c.price_forecast()},
     ),
     SlimstroomSensorDescription(
         key="smart_best_2h_start", translation_key="smart_best_2h_start",
@@ -237,6 +240,8 @@ class SlimstroomSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntit
     """Een sensor op het gedeelde coordinator-datablok."""
 
     _attr_has_entity_name = True
+    # De prijslijst is te groot voor de geschiedenis en staat er ook niet voor.
+    _unrecorded_attributes = frozenset({"prijzen"})
 
     def __init__(
         self,
@@ -259,6 +264,11 @@ class SlimstroomSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntit
     @property
     def native_value(self) -> Any:
         return self.entity_description.value_fn(self.coordinator)
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        fn = self.entity_description.attrs_fn
+        return fn(self.coordinator) if fn else None
 
 
 class SmartLoadSensor(CoordinatorEntity[MijnSlimstroomCoordinator], SensorEntity):

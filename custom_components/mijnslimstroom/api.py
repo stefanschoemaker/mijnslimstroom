@@ -15,7 +15,7 @@ from typing import Any
 
 import aiohttp
 
-from .const import BASE_URL, CLIENT_HEADERS
+from .const import BASE_URL, CLIENT_HEADERS, PRICE_DAYS
 
 
 class MijnSlimstroomError(Exception):
@@ -131,7 +131,7 @@ class MijnSlimstroomApi:
         return await self._get("/api/earnings?range=today")
 
     async def pricing_today(self) -> dict:
-        return await self._get("/api/pricing/today?resolution=15min")
+        return await self._get(f"/api/pricing/today?resolution=15min&days={PRICE_DAYS}")
 
     async def pricing_config(self) -> dict:
         return await self._get("/api/pricing/config")
