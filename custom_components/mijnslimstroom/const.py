@@ -3,7 +3,11 @@
 from __future__ import annotations
 
 DOMAIN = "mijnslimstroom"
-BASE_URL = "https://app.mijnslimstroom.nl"
+import os
+
+# Een andere server alleen voor onze eigen testomgeving.
+BASE_URL = os.environ.get("MIJNSLIMSTROOM_BASE_URL") or "https://app.mijnslimstroom.nl"
+OAUTH_CLIENT_ID = "home-assistant"
 
 # Live-vermogens elke minuut; de tragere blokken (dagtotalen, saldo,
 # prijs, batterijplan) om de 5 minuten - dezelfde cadans waarmee de
@@ -38,5 +42,5 @@ METER_REPEAT_SECONDS = 1800
 # prijsverwachting, zover die reikt (de server kapt lege dagen af).
 PRICE_DAYS = 4
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 CLIENT_HEADERS = {"X-Client": "home-assistant", "X-Client-Version": VERSION}

@@ -2,28 +2,58 @@
   "config": {
     "step": {
       "user": {
-        "title": "Mijn SlimStroom",
-        "description": "Sign in with the same credentials as the Mijn SlimStroom app.",
-        "data": {
-          "username": "Username",
-          "password": "Password"
+        "title": "Link Mijn SlimStroom",
+        "menu_options": {
+          "browser": "Sign in through the browser (recommended)",
+          "manual": "Enter an access code or password"
         }
+      },
+      "reauth": {
+        "title": "Link again",
+        "menu_options": {
+          "browser": "Sign in through the browser (recommended)",
+          "reauth_confirm": "Enter an access code or password"
+        }
+      },
+      "pick_implementation": {
+        "title": "Choose how to sign in"
       },
       "reauth_confirm": {
         "title": "Sign in again",
-        "description": "Your password changed or was revoked. Enter the new password.",
+        "description": "Your sign-in changed or was revoked. Paste a new access code or enter the new password.",
         "data": {
+          "access_token": "Access code",
+          "password": "Password"
+        }
+      },
+      "manual": {
+        "title": "Mijn SlimStroom",
+        "description": "Paste an access code from the Mijn SlimStroom app (Account > Koppelingen), or sign in with your username and password.",
+        "data": {
+          "access_token": "Access code",
+          "username": "Username",
           "password": "Password"
         }
       }
     },
     "error": {
       "invalid_auth": "Credentials rejected",
-      "cannot_connect": "Cannot reach app.mijnslimstroom.nl"
+      "cannot_connect": "Cannot reach app.mijnslimstroom.nl",
+      "missing_credentials": "Enter an access code, or a username with password"
     },
     "abort": {
       "already_configured": "This site is already configured",
-      "reauth_successful": "Signed in again"
+      "reauth_successful": "Signed in again",
+      "invalid_auth": "The link was refused",
+      "cannot_connect": "Cannot reach app.mijnslimstroom.nl",
+      "oauth_error": "The app did not return a valid link",
+      "oauth_failed": "Linking through the browser failed",
+      "oauth_timeout": "Linking through the browser took too long",
+      "oauth_unauthorized": "The link was refused",
+      "authorize_url_timeout": "The sign-in page could not be opened",
+      "missing_configuration": "The link is not set up correctly",
+      "no_url_available": "Home Assistant does not know its own address; enter an access code",
+      "user_rejected_authorize": "You did not allow the link"
     }
   },
   "entity": {

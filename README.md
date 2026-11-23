@@ -108,6 +108,23 @@ series:
       return entity.attributes.prijzen.map(p => [new Date(p.start).getTime(), p.prijs]);
 ```
 
+#### Koppelen via de browser of met een koppelcode (vanaf 1.5.0)
+
+Bij het toevoegen van de integratie kiest u **Inloggen via de
+browser**. Home Assistant opent de Mijn SlimStroom-app in uw browser;
+u logt daar in zoals u gewend bent en kiest **Toestaan**. Uw
+wachtwoord komt zo nooit in Home Assistant terecht.
+
+Lukt dat niet (bijvoorbeeld omdat My Home Assistant is uitgeschakeld),
+kies dan **Koppelcode of wachtwoord invullen**. Een koppelcode maakt u
+in de app onder Account > Koppelingen. Inloggen met gebruikersnaam en
+wachtwoord blijft werken.
+
+Een koppeling verloopt niet en is in de app onder Account >
+Koppelingen op elk moment in te trekken; Home Assistant vraagt dan om
+opnieuw te koppelen. Beide manieren werken zodra Koppelingen in de app
+voor u zichtbaar is.
+
 #### Meters terugmelden (vanaf 1.3.0)
 
 Onder **Configureren > Meters koppelen** wijst u per meter een sensor

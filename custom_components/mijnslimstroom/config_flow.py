@@ -7,9 +7,10 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigFlowResult, OptionsFlow
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
+from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     EntitySelector,
@@ -25,6 +26,8 @@ from homeassistant.helpers.selector import (
 
 from .api import InvalidAuth, MijnSlimstroomApi, MijnSlimstroomError
 from .const import (
+    BASE_URL,
+    OAUTH_CLIENT_ID,
     CONF_DISPLAY_NAME,
     CONF_SITE_ID,
     DEFAULT_THRESHOLD_W,
@@ -41,16 +44,50 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_ACCESS_TOKEN): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
+)
+STEP_REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ACCESS_TOKEN): str,
+        vol.Optional(CONF_PASSWORD): str,
     }
 )
 
 
-class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Gebruikersnaam + wachtwoord, geverifieerd tegen de echte API."""
+def _credentials(user_input: dict[str, Any], username: str = "") -> dict[str, str] | None:
+    """Een koppelcode, of gebruikersnaam met wachtwoord; None als geen van beide compleet is."""
+    code = (user_input.get(CONF_ACCESS_TOKEN) or "").strip()
+    if code:
+        return {CONF_ACCESS_TOKEN: code}
+    name = (user_input.get(CONF_USERNAME) or username).strip()
+    password = user_input.get(CONF_PASSWORD) or ""
+    if name and password:
+        return {CONF_USERNAME: name, CONF_PASSWORD: password}
+    return None
 
+
+def _api(hass, credentials: dict[str, str]) -> MijnSlimstroomApi:
+    return MijnSlimstroomApi(
+        async_get_clientsession(hass),
+        credentials.get(CONF_USERNAME, ""),
+        credentials.get(CONF_PASSWORD, ""),
+        access_token=credentials.get(CONF_ACCESS_TOKEN),
+    )
+
+
+class MijnSlimstroomConfigFlow(config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN):
+    """Koppelen via de browser (inloggen en toestaan in de app), of met
+    een koppelcode of gebruikersnaam en wachtwoord."""
+
+    DOMAIN = DOMAIN
     VERSION = 1
+
+    @property
+    def logger(self) -> logging.Logger:
+        return _LOGGER
 
     @staticmethod
     @callback
@@ -60,72 +97,89 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
+        return self.async_show_menu(step_id="user", menu_options=["browser", "manual"])
+
+    async def async_step_browser(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        # Home Assistant opent de app in de browser; die stuurt na
+        # "Toestaan" een eenmalige code terug die hier een koppelcode wordt.
+        config_entry_oauth2_flow.async_register_implementation(
+            self.hass,
+            DOMAIN,
+            config_entry_oauth2_flow.LocalOAuth2ImplementationWithPkce(
+                self.hass, DOMAIN, OAUTH_CLIENT_ID, f"{BASE_URL}/koppelen", f"{BASE_URL}/api/oauth/token"
+            ),
+        )
+        return await self.async_step_pick_implementation()
+
+    async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
+        credentials = {CONF_ACCESS_TOKEN: data["token"]["access_token"]}
+        api, error = await self._verify(credentials)
+        if api is None:
+            return self.async_abort(reason=error)
+        return await self._store(api, credentials)
+
+    async def _verify(self, credentials: dict[str, str]) -> tuple[MijnSlimstroomApi | None, str]:
+        api = _api(self.hass, credentials)
+        try:
+            await api.login()
+        except InvalidAuth:
+            return None, "invalid_auth"
+        except MijnSlimstroomError as e:
+            # De onderliggende oorzaak (DNS, timeout, TLS, 5xx) hoort in het log.
+            _LOGGER.warning("Verbinden mislukt: %s", e)
+            return None, "cannot_connect"
+        return api, ""
+
+    async def _store(self, api: MijnSlimstroomApi, credentials: dict[str, str]) -> ConfigFlowResult:
+        if self.source == SOURCE_REAUTH:
+            entry = self._get_reauth_entry()
+            kept = {k: v for k, v in entry.data.items() if k not in (CONF_PASSWORD, CONF_ACCESS_TOKEN)}
+            return self.async_update_reload_and_abort(entry, data={**kept, **credentials})
+        username = api.username or ""
+        await self.async_set_unique_id(f"{username}:{api.site_id}")
+        self._abort_if_unique_id_configured()
+        return self.async_create_entry(
+            title=api.display_name or api.site_id or username,
+            data={
+                CONF_USERNAME: username,
+                **credentials,
+                CONF_SITE_ID: api.site_id,
+                CONF_DISPLAY_NAME: api.display_name,
+            },
+        )
+
+    async def _form(
+        self, step_id: str, schema: vol.Schema, user_input: dict[str, Any] | None, username: str = ""
+    ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         if user_input is not None:
-            api = MijnSlimstroomApi(
-                async_get_clientsession(self.hass),
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-            try:
-                await api.login()
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except MijnSlimstroomError as e:
-                # De onderliggende oorzaak (DNS, timeout, TLS, 5xx)
-                # verdwijnt anders achter een generiek "kan niet
-                # bereiken" - een blik in het log moet genoeg zijn.
-                _LOGGER.warning("Verbinden mislukt: %s", e)
-                errors["base"] = "cannot_connect"
+            credentials = _credentials(user_input, username)
+            if credentials is None:
+                errors["base"] = "missing_credentials"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_USERNAME]}:{api.site_id}"
-                )
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title=api.display_name or api.site_id or user_input[CONF_USERNAME],
-                    data={
-                        **user_input,
-                        CONF_SITE_ID: api.site_id,
-                        CONF_DISPLAY_NAME: api.display_name,
-                    },
-                )
-        return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_SCHEMA, errors=errors
-        )
+                api, error = await self._verify(credentials)
+                if api is not None:
+                    return await self._store(api, credentials)
+                errors["base"] = error
+        return self.async_show_form(step_id=step_id, data_schema=schema, errors=errors)
+
+    async def async_step_manual(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        return await self._form("manual", STEP_USER_SCHEMA, user_input)
 
     async def async_step_reauth(
         self, entry_data: dict[str, Any]
     ) -> ConfigFlowResult:
-        return await self.async_step_reauth_confirm()
+        return self.async_show_menu(step_id="reauth", menu_options=["browser", "reauth_confirm"])
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        errors: dict[str, str] = {}
-        entry = self._get_reauth_entry()
-        if user_input is not None:
-            api = MijnSlimstroomApi(
-                async_get_clientsession(self.hass),
-                entry.data[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-            try:
-                await api.login()
-            except InvalidAuth:
-                errors["base"] = "invalid_auth"
-            except MijnSlimstroomError as e:
-                _LOGGER.warning("Verbinden mislukt: %s", e)
-                errors["base"] = "cannot_connect"
-            else:
-                return self.async_update_reload_and_abort(
-                    entry, data={**entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
-                )
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
-            errors=errors,
-        )
+        username = self._get_reauth_entry().data.get(CONF_USERNAME, "")
+        return await self._form("reauth_confirm", STEP_REAUTH_SCHEMA, user_input, username)
 
 
 class MijnSlimstroomOptionsFlow(OptionsFlow):

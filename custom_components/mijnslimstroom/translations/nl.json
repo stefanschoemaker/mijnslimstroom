@@ -2,28 +2,58 @@
   "config": {
     "step": {
       "user": {
-        "title": "Mijn SlimStroom",
-        "description": "Log in met dezelfde gegevens als de Mijn SlimStroom-app.",
-        "data": {
-          "username": "Gebruikersnaam",
-          "password": "Wachtwoord"
+        "title": "Mijn SlimStroom koppelen",
+        "menu_options": {
+          "browser": "Inloggen via de browser (aanbevolen)",
+          "manual": "Koppelcode of wachtwoord invullen"
         }
+      },
+      "reauth": {
+        "title": "Opnieuw koppelen",
+        "menu_options": {
+          "browser": "Inloggen via de browser (aanbevolen)",
+          "reauth_confirm": "Koppelcode of wachtwoord invullen"
+        }
+      },
+      "pick_implementation": {
+        "title": "Kies hoe je wilt inloggen"
       },
       "reauth_confirm": {
         "title": "Opnieuw inloggen",
-        "description": "Je wachtwoord is gewijzigd of ingetrokken. Voer het nieuwe wachtwoord in.",
+        "description": "Je inlog is gewijzigd of ingetrokken. Plak een nieuwe koppelcode of voer het nieuwe wachtwoord in.",
         "data": {
+          "access_token": "Koppelcode",
+          "password": "Wachtwoord"
+        }
+      },
+      "manual": {
+        "title": "Mijn SlimStroom",
+        "description": "Plak een koppelcode uit de Mijn SlimStroom-app (Account > Koppelingen), of log in met je gebruikersnaam en wachtwoord.",
+        "data": {
+          "access_token": "Koppelcode",
+          "username": "Gebruikersnaam",
           "password": "Wachtwoord"
         }
       }
     },
     "error": {
       "invalid_auth": "Inloggegevens geweigerd",
-      "cannot_connect": "Kan app.mijnslimstroom.nl niet bereiken"
+      "cannot_connect": "Kan app.mijnslimstroom.nl niet bereiken",
+      "missing_credentials": "Vul een koppelcode in, of een gebruikersnaam met wachtwoord"
     },
     "abort": {
       "already_configured": "Deze locatie is al toegevoegd",
-      "reauth_successful": "Opnieuw ingelogd"
+      "reauth_successful": "Opnieuw ingelogd",
+      "invalid_auth": "De koppeling is geweigerd",
+      "cannot_connect": "app.mijnslimstroom.nl is niet bereikbaar",
+      "oauth_error": "De app gaf geen geldige koppeling terug",
+      "oauth_failed": "Het koppelen via de browser is mislukt",
+      "oauth_timeout": "Het koppelen via de browser duurde te lang",
+      "oauth_unauthorized": "De koppeling is geweigerd",
+      "authorize_url_timeout": "De inlogpagina kon niet worden geopend",
+      "missing_configuration": "De koppeling is niet goed ingesteld",
+      "no_url_available": "Home Assistant weet zijn eigen adres niet; vul een koppelcode in",
+      "user_rejected_authorize": "Je hebt de koppeling niet toegestaan"
     }
   },
   "entity": {
