@@ -5,7 +5,10 @@
     "@stefanschoemaker"
   ],
   "config_flow": true,
-  "dependencies": [],
+  "dependencies": [
+    "auth",
+    "http"
+  ],
   "documentation": "https://help.mijnslimstroom.nl",
   "integration_type": "hub",
   "iot_class": "cloud_polling",
