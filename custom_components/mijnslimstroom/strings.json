@@ -3,23 +3,26 @@
     "step": {
       "user": {
         "title": "Mijn SlimStroom",
-        "description": "Log in met dezelfde gegevens als de Mijn SlimStroom-app.",
+        "description": "Plak een koppelcode uit de Mijn SlimStroom-app (Account > Koppelingen), of log in met je gebruikersnaam en wachtwoord.",
         "data": {
+          "access_token": "Koppelcode",
           "username": "Gebruikersnaam",
           "password": "Wachtwoord"
         }
       },
       "reauth_confirm": {
         "title": "Opnieuw inloggen",
-        "description": "Je wachtwoord is gewijzigd of ingetrokken. Voer het nieuwe wachtwoord in.",
+        "description": "Je inlog is gewijzigd of ingetrokken. Plak een nieuwe koppelcode of voer het nieuwe wachtwoord in.",
         "data": {
+          "access_token": "Koppelcode",
           "password": "Wachtwoord"
         }
       }
     },
     "error": {
       "invalid_auth": "Inloggegevens geweigerd",
-      "cannot_connect": "Kan app.mijnslimstroom.nl niet bereiken"
+      "cannot_connect": "Kan app.mijnslimstroom.nl niet bereiken",
+      "missing_credentials": "Vul een koppelcode in, of een gebruikersnaam met wachtwoord"
     },
     "abort": {
       "already_configured": "Deze locatie is al toegevoegd",

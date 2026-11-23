@@ -13,7 +13,7 @@ from datetime import datetime
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -40,8 +40,9 @@ SERVICE_SCHEMA = vol.Schema({
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     api = MijnSlimstroomApi(
         async_get_clientsession(hass),
-        entry.data[CONF_USERNAME],
-        entry.data[CONF_PASSWORD],
+        entry.data.get(CONF_USERNAME, ""),
+        entry.data.get(CONF_PASSWORD, ""),
+        access_token=entry.data.get(CONF_ACCESS_TOKEN),
     )
     try:
         await api.login()

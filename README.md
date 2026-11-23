@@ -108,6 +108,15 @@ series:
       return entity.attributes.prijzen.map(p => [new Date(p.start).getTime(), p.prijs]);
 ```
 
+#### Koppelen met een koppelcode (vanaf 1.5.0)
+
+In plaats van uw gebruikersnaam en wachtwoord kunt u een koppelcode
+plakken. U maakt die in de Mijn SlimStroom-app onder Account >
+Koppelingen, zodra dat onderdeel daar voor u zichtbaar is. Een
+koppelcode verloopt niet en is in de app op elk moment in te trekken;
+Home Assistant vraagt dan om een nieuwe. Inloggen met gebruikersnaam
+en wachtwoord blijft werken.
+
 #### Meters terugmelden (vanaf 1.3.0)
 
 Onder **Configureren > Meters koppelen** wijst u per meter een sensor

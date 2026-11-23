@@ -3,23 +3,26 @@
     "step": {
       "user": {
         "title": "Mijn SlimStroom",
-        "description": "Sign in with the same credentials as the Mijn SlimStroom app.",
+        "description": "Paste an access code from the Mijn SlimStroom app (Account > Koppelingen), or sign in with your username and password.",
         "data": {
+          "access_token": "Access code",
           "username": "Username",
           "password": "Password"
         }
       },
       "reauth_confirm": {
         "title": "Sign in again",
-        "description": "Your password changed or was revoked. Enter the new password.",
+        "description": "Your sign-in changed or was revoked. Paste a new access code or enter the new password.",
         "data": {
+          "access_token": "Access code",
           "password": "Password"
         }
       }
     },
     "error": {
       "invalid_auth": "Credentials rejected",
-      "cannot_connect": "Cannot reach app.mijnslimstroom.nl"
+      "cannot_connect": "Cannot reach app.mijnslimstroom.nl",
+      "missing_credentials": "Enter an access code, or a username with password"
     },
     "abort": {
       "already_configured": "This site is already configured",

@@ -8,7 +8,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -41,10 +41,38 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Optional(CONF_ACCESS_TOKEN): str,
+        vol.Optional(CONF_USERNAME): str,
+        vol.Optional(CONF_PASSWORD): str,
     }
 )
+STEP_REAUTH_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_ACCESS_TOKEN): str,
+        vol.Optional(CONF_PASSWORD): str,
+    }
+)
+
+
+def _credentials(user_input: dict[str, Any], username: str = "") -> dict[str, str] | None:
+    """Een koppelcode, of gebruikersnaam met wachtwoord; None als geen van beide compleet is."""
+    code = (user_input.get(CONF_ACCESS_TOKEN) or "").strip()
+    if code:
+        return {CONF_ACCESS_TOKEN: code}
+    name = (user_input.get(CONF_USERNAME) or username).strip()
+    password = user_input.get(CONF_PASSWORD) or ""
+    if name and password:
+        return {CONF_USERNAME: name, CONF_PASSWORD: password}
+    return None
+
+
+def _api(hass, credentials: dict[str, str]) -> MijnSlimstroomApi:
+    return MijnSlimstroomApi(
+        async_get_clientsession(hass),
+        credentials.get(CONF_USERNAME, ""),
+        credentials.get(CONF_PASSWORD, ""),
+        access_token=credentials.get(CONF_ACCESS_TOKEN),
+    )
 
 
 class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -61,12 +89,11 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
-        if user_input is not None:
-            api = MijnSlimstroomApi(
-                async_get_clientsession(self.hass),
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
+        credentials = _credentials(user_input) if user_input is not None else None
+        if user_input is not None and credentials is None:
+            errors["base"] = "missing_credentials"
+        elif credentials is not None:
+            api = _api(self.hass, credentials)
             try:
                 await api.login()
             except InvalidAuth:
@@ -78,14 +105,14 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Verbinden mislukt: %s", e)
                 errors["base"] = "cannot_connect"
             else:
-                await self.async_set_unique_id(
-                    f"{user_input[CONF_USERNAME]}:{api.site_id}"
-                )
+                username = api.username or ""
+                await self.async_set_unique_id(f"{username}:{api.site_id}")
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title=api.display_name or api.site_id or user_input[CONF_USERNAME],
+                    title=api.display_name or api.site_id or username,
                     data={
-                        **user_input,
+                        CONF_USERNAME: username,
+                        **credentials,
                         CONF_SITE_ID: api.site_id,
                         CONF_DISPLAY_NAME: api.display_name,
                     },
@@ -104,12 +131,13 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         errors: dict[str, str] = {}
         entry = self._get_reauth_entry()
-        if user_input is not None:
-            api = MijnSlimstroomApi(
-                async_get_clientsession(self.hass),
-                entry.data[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
+        credentials = (
+            _credentials(user_input, entry.data.get(CONF_USERNAME, "")) if user_input is not None else None
+        )
+        if user_input is not None and credentials is None:
+            errors["base"] = "missing_credentials"
+        elif credentials is not None:
+            api = _api(self.hass, credentials)
             try:
                 await api.login()
             except InvalidAuth:
@@ -118,12 +146,11 @@ class MijnSlimstroomConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.warning("Verbinden mislukt: %s", e)
                 errors["base"] = "cannot_connect"
             else:
-                return self.async_update_reload_and_abort(
-                    entry, data={**entry.data, CONF_PASSWORD: user_input[CONF_PASSWORD]}
-                )
+                kept = {k: v for k, v in entry.data.items() if k not in (CONF_PASSWORD, CONF_ACCESS_TOKEN)}
+                return self.async_update_reload_and_abort(entry, data={**kept, **credentials})
         return self.async_show_form(
             step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_PASSWORD): str}),
+            data_schema=STEP_REAUTH_SCHEMA,
             errors=errors,
         )
 

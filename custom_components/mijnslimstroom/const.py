@@ -38,5 +38,5 @@ METER_REPEAT_SECONDS = 1800
 # prijsverwachting, zover die reikt (de server kapt lege dagen af).
 PRICE_DAYS = 4
 
-VERSION = "1.4.0"
+VERSION = "1.5.0"
 CLIENT_HEADERS = {"X-Client": "home-assistant", "X-Client-Version": VERSION}

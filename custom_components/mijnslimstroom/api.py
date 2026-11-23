@@ -35,17 +35,47 @@ class MijnSlimstroomApi:
         username: str,
         password: str,
         base_url: str = BASE_URL,
+        access_token: str | None = None,
     ) -> None:
         self._session = session
         self._username = username
         self._password = password
+        # Een koppelcode uit de app (Account > Koppelingen): geen
+        # wachtwoord nodig, verloopt niet, en is in de app in te trekken.
+        self._access_token = access_token or None
+        self.username: str | None = username or None
         self._base_url = base_url.rstrip("/")
         self._token: str | None = None
         self._token_expires: float = 0.0
         self.site_id: str | None = None
         self.display_name: str | None = None
 
+    async def _login_with_code(self) -> None:
+        try:
+            async with self._session.get(
+                f"{self._base_url}/api/whoami",
+                headers={**CLIENT_HEADERS, "Authorization": f"Bearer {self._access_token}"},
+                timeout=aiohttp.ClientTimeout(total=20),
+            ) as r:
+                if r.status in (401, 403):
+                    raise InvalidAuth("koppelcode geweigerd")
+                r.raise_for_status()
+                body = await r.json()
+        except InvalidAuth:
+            raise
+        except Exception as e:  # noqa: BLE001
+            raise MijnSlimstroomError(
+                f"controle van de koppelcode mislukt: {type(e).__name__}: {e}"
+            ) from e
+        self._token = self._access_token
+        self._token_expires = float("inf")
+        self.site_id = body.get("site_id")
+        self.display_name = body.get("display_name")
+        self.username = body.get("username")
+
     async def login(self) -> None:
+        if self._access_token:
+            return await self._login_with_code()
         try:
             async with self._session.post(
                 f"{self._base_url}/api/auth/login",
@@ -80,7 +110,7 @@ class MijnSlimstroomApi:
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as r:
                 if r.status == 401:
-                    if _retried:
+                    if _retried or self._access_token:
                         raise InvalidAuth("token en herlogin geweigerd")
                     # Token ingetrokken voor de expiry (wachtwoord
                     # gewijzigd, site verhuisd): een verse login proberen.
@@ -106,7 +136,7 @@ class MijnSlimstroomApi:
                 timeout=aiohttp.ClientTimeout(total=20),
             ) as r:
                 if r.status == 401:
-                    if _retried:
+                    if _retried or self._access_token:
                         raise InvalidAuth("token en herlogin geweigerd")
                     self._token = None
                     return await self._post(path, body, _retried=True)
